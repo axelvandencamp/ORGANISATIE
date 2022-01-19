@@ -1,5 +1,5 @@
 --SELECT r.id, r.name, * 
-SELECT COUNT(r.id) aantal, r.id, r.name
+SELECT r.id, r.name, COUNT(r.id) aantal
 FROM marketing._CRM_partnerinfo() sq1
 	JOIN (
 --
