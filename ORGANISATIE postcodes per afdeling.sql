@@ -11,7 +11,8 @@ FROM res_partner p
 	LEFT OUTER JOIN res_organisation_city_rel ocr ON ocr.partner_id = COALESCE(a2.id,a.id)
 	LEFT OUTER JOIN res_country_city cc ON ocr.zip_id = cc.id
 
-WHERE SUBSTRING(cc.zip from '[0-9]+')::numeric IN ('9990','9900')	
+--WHERE SUBSTRING(cc.zip from '[0-9]+')::numeric IN ('9990','9900')
+WHERE p.organisation_type_id = 1
 ORDER BY COALESCE(a2.name,a.name)
 
 --SELECT name FROM res_partner WHERE id = 248587
