@@ -1,8 +1,8 @@
 ------------------------
 -- actieve afdelingen --
 ------------------------
-SELECT DISTINCT p.id p_id, 
-	COALESCE(p.first_name,'') voornaam,
+SELECT DISTINCT p.id p_id
+	, COALESCE(p.first_name,'') voornaam,
 	COALESCE(p.last_name,'') familienaam,
 	afd.name afdeling,
 	CASE 
@@ -10,6 +10,11 @@ SELECT DISTINCT p.id p_id,
 	END afdeling_actief,
 	fc.name functiecategorie,
 	ft.name functietype,
+	COALESCE(of.valid_from_date,'1900-01-01') valid_from_date,
+	COALESCE(of.write_date::date,'1900-01-01') write_date,
+	COALESCE(of.valid_from_date,of.write_date::date) from_write,
+	u.login,
+	of.valid_to_date,
 	--!!! voor buitenlanders moet "res_partner.street" genomen worden met de straat naam en nr in 1 veld !!!
 	CASE
 		WHEN c.id = 21 AND p.crab_used = 'true' THEN ccs.name
@@ -41,22 +46,27 @@ SELECT DISTINCT p.id p_id,
 	END AS provincie,
 	c.name land,
 	p.email, p.email_work email_werk
+	--*/
 FROM (SELECT p.id, p.name
-	FROM res_partner p
-		JOIN res_organisation_type o ON p.organisation_type_id = o.id
-		--LEFT OUTER JOIN res_partner_bank pb ON p.id = pb.partner_id
-	WHERE /*p.organisation_type_id IN (1) AND*/ p.active
-	ORDER BY p.organisation_type_id, p.name)afd
+		FROM res_partner p
+			JOIN res_organisation_type o ON p.organisation_type_id = o.id
+			--LEFT OUTER JOIN res_partner_bank pb ON p.id = pb.partner_id
+		WHERE /*p.organisation_type_id IN (1) AND*/ p.active
+		ORDER BY p.organisation_type_id, p.name)afd
 	JOIN res_organisation_function of ON of.partner_id = afd.id
 	JOIN res_partner p ON p.id = of.person_id
 	JOIN res_function_type ft ON ft.id = of.function_type_id 
 	JOIN res_function_categ fc ON fc.id = ft.categ_id
 
+	JOIN res_users u ON u.id = of.write_uid
 	--land, straat, gemeente info
 	JOIN res_country c ON p.country_id = c.id
 	LEFT OUTER JOIN res_country_city_street ccs ON p.street_id = ccs.id
 	LEFT OUTER JOIN res_country_city cc ON p.zip_id = cc.id
 WHERE COALESCE(of.valid_to_date,'2999-01-01') > now()::date
+	AND COALESCE(of.valid_from_date,of.write_date::date) >= '2026-06-01'
+	--AND u.login = 'apiuser'
+ORDER BY COALESCE(of.valid_from_date,of.write_date::date) DESC
 
 
 
